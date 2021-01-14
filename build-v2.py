@@ -1,16 +1,25 @@
+import sys
+import os
 import numpy as np
 import cv2
 from keras.callbacks import ModelCheckpoint,EarlyStopping
-from keras.layers import Conv2D, Flatten, MaxPooling2D,Dense,Dropout,SpatialDropout2D
+from keras.layers import Conv2D, Flatten, MaxPooling2D,Dense,Dropout,SpatialDropout2D, BatchNormalization, MaxPool2D
 from keras.models  import Sequential
 from keras.preprocessing.image import ImageDataGenerator, img_to_array, load_img, array_to_img
 import random,os,glob
 import matplotlib.pyplot as plt
 
-size = 128
-batch_size = 64 #was 32
+argvs = sys.argv
+argc = len(argvs)
+epochs = int(argvs[1])
+
+size = 150
+batch_size = 16 #was 64, 32
 
 dir_path = './classification/garbage-classification/garbage-classification'
+#dir_path = './data-condensed/dataset/train'
+
+num_classes = 7
 
 img_list = glob.glob(os.path.join(dir_path, '*/*.jpg'))
 
@@ -58,31 +67,48 @@ Labels = '\n'.join(sorted(train_generator.class_indices.keys()))
 with open('labels.txt', 'w') as f:
   f.write(Labels)
 
-
+'''
 model=Sequential()
 #Convolution blocks
-
 model.add(Conv2D(32,(3,3), padding='same',input_shape=(size,size,3),activation='relu'))
 model.add(MaxPooling2D(pool_size=2))
-#model.add(SpatialDropout2D(0.5)) # No accuracy
-
 model.add(Conv2D(64,(3,3), padding='same',activation='relu'))
 model.add(MaxPooling2D(pool_size=2))
-#model.add(SpatialDropout2D(0.5))
-
 model.add(Conv2D(32,(3,3), padding='same',activation='relu'))
 model.add(MaxPooling2D(pool_size=2))
-
 #Classification layers
 model.add(Flatten())
-
-model.add(Dense(64,activation='relu'))
-#model.add(SpatialDropout2D(0.5))
+model.add(Dense(128,activation='relu')) #was 64
 model.add(Dropout(0.2)) #0.2 better than 0.4
-model.add(Dense(16,activation='relu'))#was 32
-
+model.add(Dense(64,activation='relu'))#was 32
 model.add(Dropout(0.2)) #0.2 better acc then 0.4, better loss, 0.1 better than 0.2 in acc/loss
-model.add(Dense(7,activation='softmax'))
+model.add(Dense(512,activation='relu'))#was 32
+model.add(Dropout(0.1))
+model.add(Dense(num_classes,activation='softmax'))
+'''
+
+model = Sequential()
+model.add(Conv2D(32, kernel_size=3,input_shape=(size,size,3),activation='relu'))
+model.add(BatchNormalization())
+model.add(MaxPool2D(strides=(2,2)))
+model.add(Dropout(0.3))
+model.add(Conv2D(32, kernel_size=3,activation='relu'))
+model.add(BatchNormalization())
+model.add(MaxPool2D(strides=(2,2)))
+model.add(Dropout(0.5))
+model.add(Conv2D(64, kernel_size=3,activation='relu'))
+model.add(BatchNormalization())
+model.add(MaxPool2D(strides=(2,2)))
+model.add(Dropout(0.4))
+model.add(Conv2D(64, kernel_size=3,activation='relu'))
+model.add(BatchNormalization())
+model.add(MaxPool2D(strides=(2,2)))
+model.add(Dropout(0.3))
+model.add(Flatten())
+model.add(Dense(512,activation='relu'))
+model.add(Dense(128,activation='relu'))
+model.add(Dropout(0.4))
+model.add(Dense(num_classes,activation='softmax'))
 
 filepath="trained_model.h5"
 checkpoint1 = ModelCheckpoint(filepath, monitor='val_acc', verbose=2, save_best_only=True, mode='max')
@@ -97,21 +123,12 @@ model.compile(loss='categorical_crossentropy',
 #es=EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=50)
 
 history = model.fit(train_generator,
-                              epochs=30,
+                              epochs=epochs,
                               steps_per_epoch=2927//batch_size,
                               validation_data=test_generator,
                               validation_steps=291//batch_size,
                               workers = 4,
                               callbacks=callbacks_list)
-"""
-history = model.fit_generator(train_generator,
-                              epochs=150,
-                              steps_per_epoch=2927//batch_size,
-                              validation_data=test_generator,
-                              validation_steps=291//batch_size,
-                              workers = 4,
-                              callbacks=callbacks_list)
-"""
 #41 epoch - 75% #73- 76.9%
 #78 epoch - 80%
 
