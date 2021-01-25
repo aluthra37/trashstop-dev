@@ -19,13 +19,13 @@ model = models.load_model('model-adapted.h5')
 camera = PiCamera()
  
 # Set the camera resolution
-camera.resolution = (640, 640)
+camera.resolution = (640, 480)
  
 # Set the number of frames per second
 camera.framerate = 16
  
 # Generates a 3D RGB array and stores it in rawCapture
-raw_capture = PiRGBArray(camera, size=(size, size))
+raw_capture = PiRGBArray(camera, size=(640, 480))
  
 # Wait a certain number of seconds to allow the camera time to warmup
 time.sleep(0.1)
