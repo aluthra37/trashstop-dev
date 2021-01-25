@@ -3,23 +3,32 @@ from picamera import PiCamera # Provides a Python interface for the RPi Camera M
 import time # Provides time-related functions
 import cv2 # OpenCV library
  
+#size for capture
+size = 128
+
+#classifications array
+classifications = ['Cardboard','Glass','Metal','Nothing','Paper','Plastic','Landfill']
+
+#Load the saved model
+model = models.load_model('model-adapted.h5')
+
 # Initialize the camera
 camera = PiCamera()
  
 # Set the camera resolution
-camera.resolution = (640, 480)
+camera.resolution = (640, 640)
  
 # Set the number of frames per second
-camera.framerate = 32
+camera.framerate = 16
  
 # Generates a 3D RGB array and stores it in rawCapture
-raw_capture = PiRGBArray(camera, size=(640, 480))
+raw_capture = PiRGBArray(camera, size=(size, size))
  
 # Wait a certain number of seconds to allow the camera time to warmup
 time.sleep(0.1)
  
 # Capture frames continuously from the camera
-for frame in camera.capture_continuous(raw_capture, format="bgr", use_video_port=True):
+for frame in camera.capture_continuous(raw_capture, format="rbg", use_video_port=True):
      
     # Grab the raw NumPy array representing the image
     image = frame.array
