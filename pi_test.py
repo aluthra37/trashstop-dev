@@ -2,6 +2,9 @@ from picamera.array import PiRGBArray # Generates a 3D RGB array
 from picamera import PiCamera # Provides a Python interface for the RPi Camera Module
 import time # Provides time-related functions
 import cv2 # OpenCV library
+import numpy as np
+from PIL import Image
+from keras import models
  
 #size for capture
 size = 128
